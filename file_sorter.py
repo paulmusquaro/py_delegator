@@ -59,7 +59,7 @@ class FileOrganizer:
             TRANS[ord(c.upper())] = l.upper()
 
         t_name = name.translate(TRANS)
-        t_name = re.sub(r'\W', '_', t_name)
+        t_name = re.sub(r'\W', '.', t_name)
         return t_name
 
     def handle_media(self, filename: Path, target_folder: Path):
@@ -117,6 +117,3 @@ def start():
         print(f'Start in folder {folder_for_scan.resolve()}')
         file_organizer = FileOrganizer()
         file_organizer.organize_files(folder_for_scan.resolve())
-
-if __name__ == '__main__':
-    start()
