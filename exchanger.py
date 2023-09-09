@@ -36,15 +36,3 @@ def ex_main():
         print(result)
         if result == "До побачення!":
             break
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,4 +1,4 @@
-import sys
+# import sys
 import re
 import shutil
 from pathlib import Path
@@ -111,9 +111,8 @@ class FileOrganizer:
         for folder in self.FOLDERS[::-1]:
             self.handle_folder(folder)
 
-def start():
-    if len(sys.argv) > 1:
-        folder_for_scan = Path(sys.argv[1])
-        print(f'Start in folder {folder_for_scan.resolve()}')
-        file_organizer = FileOrganizer()
-        file_organizer.organize_files(folder_for_scan.resolve())
+def start(folder_path):
+    folder_for_scan = Path(folder_path)
+    print(f'Start in folder {folder_for_scan.resolve()}')
+    file_organizer = FileOrganizer()
+    file_organizer.organize_files(folder_for_scan.resolve())

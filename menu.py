@@ -1,10 +1,11 @@
 import importlib
-# from 
-# from
-# from 
+import os
 from calend import calend_main
-# from
 # from 
+# from
+from file_sorter import start
+from exchanger import ex_main
+
 
 class Menu:
     def __init__(self):
@@ -12,8 +13,8 @@ class Menu:
             1: ("calend", "calend_main"),
             2: ("adressbook", "adressbook_main"),
             3: ("notebook", "notebook_main"),
-            4: ("filesorter", "filesorter_main"),
-            5: ("nth", "nth_main")
+            4: ("file_sorter", "start"),
+            5: ("exchanger", "ex_main")
         }
 
     def make_decision(self, choice):
@@ -23,9 +24,16 @@ class Menu:
             return
 
         try:
-            module = importlib.import_module(module_name)
-            function = getattr(module, function_name)
-            function()
+            if choice == 4:
+                directory_path = input("Enter the path to directory: ")
+                if os.path.exists(directory_path) and os.path.isdir(directory_path):
+                    function = getattr(importlib.import_module(module_name), function_name)
+                    function(directory_path)
+                else:
+                    print("Invalid directory path. Please enter a valid directory path.")
+            else:
+                function = getattr(importlib.import_module(module_name), function_name)
+                function()
         except ModuleNotFoundError:
             print("Module not found.")
         except AttributeError:
@@ -37,7 +45,7 @@ def main():
     print("2. Address Book")
     print("3. Notebook")
     print("4. File Sorter")
-    print("5. Nth Program")
+    print("5. Exchanger")
     print("6. Exit")
 
     menu = Menu()
