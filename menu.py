@@ -2,7 +2,7 @@ import importlib
 import os
 from calend import calend_main
 # from 
-# from
+from notebook.nb_main import NoteManager
 from file_sorter import start
 from exchanger import ex_main
 
@@ -12,7 +12,7 @@ class Menu:
         self.choices = {
             1: ("calend", "calend_main"),
             2: ("adressbook", "adressbook_main"),
-            3: ("notebook", "notebook_main"),
+            3: ("notebook.nb_main", "nb_main"),
             4: ("file_sorter", "start"),
             5: ("exchanger", "ex_main")
         }
@@ -22,8 +22,15 @@ class Menu:
         
         if not module_name:
             return
+        
+        if choice == 3:
+            note_folder = "notebook/notes"  # Задайте шлях до папки для зберігання нотаток
+            note_manager = NoteManager(note_folder)
+            note_manager.nb_main()
+            return True
 
         try:
+
             if choice == 4:
                 directory_path = input("Enter the path to directory: ")
                 if os.path.exists(directory_path) and os.path.isdir(directory_path):
@@ -49,13 +56,15 @@ def main():
     print("6. Exit")
 
     menu = Menu()
+    option_3_called = False
 
     while True:
         try:
             choice = int(input("Enter your choice (1-6): "))
             if choice == 6:
                 break
-            menu.make_decision(choice)
+            if not option_3_called or (option_3_called and choice != 4):
+                option_3_called = menu.make_decision(choice)
         except ValueError:
             print("Invalid input. Please enter a number between 1 and 6.")
 
