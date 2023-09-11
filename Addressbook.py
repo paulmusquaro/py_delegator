@@ -2,15 +2,22 @@ from collections import UserDict
 import re
 from collections import deque
 from datetime import datetime, timedelta
-
+from copy import deepcopy
 contact = None
 ab = None
 
 info = "Привіт, це твій особистий помічник\nДоступні команди за запитом 'команди'"
 
-
 def info_command():
-    print("Доступні команди: 'записати', 'email', 'номер', 'команди', 'перегляд', 'знайти', 'дні'")
+    print("Доступні команди: 'записати', 'email', 'номер', 'перегляд', 'знайти', 'дні', 'редагувати', 'видалити'")
+
+def check_empty_ab(func):
+    def wrapper(self, *args, **kwargs):
+        if not self.data:
+            print("Адресна книга порожня. Додайте контактні картки до неї")
+        else:
+            return func(self, *args, **kwargs)
+    return wrapper
 
 
 class AddressBook(UserDict):
@@ -24,54 +31,61 @@ class AddressBook(UserDict):
         else:
             print("Контакт вже існує")
 
+    @check_empty_ab
     def view(self):
-        try:
-            [last_key] = deque(self.data, maxlen=1)
-            print("------------------------------------")
-            for key, el in self.data.items():
-                print("{:<18} {:<10}".format("Ім'я:", el["Ім'я"]))
-                print("{:<18} {:<10}".format("Адреса:", el["Адреса"]))
-                print("{:<18} {:<10}".format("Номери телефону:", ", ".join(el["Телефон"])))
-                print("{:<18} {:<10}".format("Поштові скриньки:", ", ".join(el["Email"])))
-                print("{:<18} {}".format("Birthdate:", el["Birthdate"]))
-                if len(self.data) > 1 and key != last_key:
-                    print("************************************")
-            print("------------------------------------")
-        except ValueError:
-            print("Відсутні контактні картки")
+        [last_key] = deque(self.data, maxlen=1)
+        print("------------------------------------")
+        for key, el in self.data.items():
+            print("{:<18} {:<10}".format("Ім'я:", el["Ім'я"]))
+            print("{:<18} {:<10}".format("Адреса:", el["Адреса"]))
+            print("{:<18} {:<10}".format("Номери телефону:", ", ".join(el["Телефон"])))
+            print("{:<18} {:<10}".format("Поштові скриньки:", ", ".join(el["Email"])))
+            print("{:<18} {}".format("Birthdate:", el["Birthdate"]))
+            if len(self.data) > 1 and key != last_key:
+                print("************************************")
+        print("------------------------------------")
 
+    @check_empty_ab
     def add_phone(self):
         contact_enter = input("Введіть контакт, якому хочете додати номер: ")
-        pattern_for_phone = r'^\+?\d{11,16}$|^\d{10,12}$|^\+?\d{0,4}\(\d{3}\)\d{7,9}$|^\+?\d{0,4}\(\d{3}\)\d{1,3}-\d{1,3}-\d{1,3}$|^\(\d{3}\)\d{1,3}-\d{1,3}-\d{1,3}\|^\d{3}-\d{1,3}-\d{1,3}-\d{1,3}$'
         if contact_enter in self.data.keys():
             added = input("Введіть додатковий номер телефону: ")
-            if re.match(pattern_for_phone, added):
+            if re.match(Contact._PATTERN_FOR_PHONE, added):
                 self.data[contact_enter]["Телефон"].append(added)
                 print(f"Додатковий номер до контакту {contact_enter} успішно додано")
         else:
             print("Зазначеного контакту не існує. Створіть його")
 
+    @check_empty_ab
     def add_email(self):
         contact_enter = input("Введіть контакт, якому хочете додати поштову скриньку: ")
-        pattern_for_email = r"[a-z\d]+@[a-z]+\.[a-z]+(?:\.[a-z]+)?"
         if contact_enter in self.data.keys():
             added = input("Введіть запасну поштову скриньку: ")
-            if re.match(pattern_for_email, added):
+            if re.match(Contact._PATTERN_FOR_EMAIL, added):
                 self.data[contact_enter]["Email"].append(added)
                 print(f"Додатковий email до контакту {contact_enter} успішно додано")
+            else:
+                print("Зазначеного контакту не існує. Створіть його")
         else:
-            print("Зазначеного контакту не існує. Створіть його")
+            print("Адресна книга порожня. Додайте контактні картки до неї")
 
+    @check_empty_ab
     def coming_birthdays(self):
         current_bd = dict()
+        bd_actual = dict()
         period = int(input("Введіть кінцевий період (кількість днів) для пошуку найближчих святкувань: "))
         start_period = datetime.now().date()
         end_period = start_period + timedelta(days=period)
-        for contact_name, contact_data in self.data.items():
-            for key, value in contact_data.items():
-                if key == "Birthdate":
+        for contact_name, contact_data in self.data.items():  # ключ - название контакта, значение - контакт
+            for key, value in contact_data.items():           # Birthdate : datetime
+                if key == "Birthdate" and value:
                     current_bd.update({contact_name: value.replace(year=datetime.now().year)})
-        bd_dict = {name: date for name, date in current_bd.items() if end_period >= date >= start_period}
+        for name, date in current_bd.items():
+            if date < start_period:
+                bd_actual.update({name: date.replace(year=start_period.year+1)})
+            else:
+                bd_actual.update({name: date})
+        bd_dict = {name: date for name, date in bd_actual.items() if end_period >= date >= start_period}
         bd_dict = dict(sorted(bd_dict.items(), key=lambda item: item[1]))
         if bd_dict:
             result_string = f"Сьогодні {start_period}"
@@ -81,35 +95,106 @@ class AddressBook(UserDict):
             result_string = "За вказаним періодом немає святкувань"
         print(result_string)
 
+    @check_empty_ab
     def find(self):
-        if self.data:
-            search_str = str(input("Введіть номер або ім'я : ")).lower()
-            print("!" * 40)
-            contact_find = False
-            for name, phone in self.data.items():
-                name_lower = name.lower()
-                if search_str in name_lower or search_str in phone["Телефон"]:
-                    if contact_find:
-                        print("*" * 40)
-                    print("{:<18} {:<10}".format("Ім'я:", phone["Ім'я"]))
-                    print("{:<18} {:<10}".format("Адреса:", phone["Адреса"]))
-                    print("{:<18} {:<10}".format("Номери телефону:", ", ".join(phone["Телефон"])))
-                    print("{:<18} {:<10}".format("Поштові скриньки:", ", ".join(phone["Email"])))
-                    print("{:<18} {}".format("Birthdate:", phone["Birthdate"]))
-                    contact_find = True
-                else:
-                    continue
-            if not contact_find:
-                print("Не знайдено контактів за вашим запитом")
-            print("!" * 40)
+        print(self.data)
+        search_str = str(input("Введіть номер або ім'я : ")).lower()
+        print("!" * 40)
+        contact_find = False
+        for name, phone in self.data.items():
+            name_lower = name.lower()
+            if search_str in name_lower or search_str in str([phone["Телефон"]]):
+                if contact_find:
+                    print("*" * 40)
+                print("{:<18} {:<10}".format("Ім'я:", phone["Ім'я"]))
+                print("{:<18} {:<10}".format("Адреса:", phone["Адреса"]))
+                print("{:<18} {:<10}".format("Номери телефону:", ", ".join(phone["Телефон"])))
+                print("{:<18} {:<10}".format("Поштові скриньки:", ", ".join(phone["Email"])))
+                print("{:<18} {}".format("Birthdate:", phone["Birthdate"]))
+                contact_find = True
+            else:
+                continue
+        if not contact_find:
+            print("Не знайдено контактів за вашим запитом")
+        print("!" * 40)
+
+    @check_empty_ab
+    def remove_contact(self):
+        index = input("Введіть контакт, що бажаєте видалити: ")
+        if index in self.data:
+            self.data.pop(index)
+            print(f"Контакт {index} було успішно видалено із телефонної книги")
         else:
-            print("Відсутні контакти у телефонній книзі")
+            print("Видалення неможливе. Зазначеного контакту не існує")
+
+    @check_empty_ab
+    def edit_contact(self):
+        enter = input("Введіть ім'я контакту, що бажаєте відредагувати: ")
+        new_dict = {}
+        contacts_for_delete = []
+        for name, record in self.data.items():
+            if enter == name:
+                attribute = input("Введіть розділ, щол потрібно відредагувати: ")
+                if attribute in ["name", "person", "subject"]:
+                    new_value = input("Введіть нові дані name: ")
+                    if re.match(Contact._PATTERN_FOR_NAME, new_value) and new_value != name:
+                        record["Ім'я"] = new_value
+                        new_dict.update({new_value: record})
+                        contacts_for_delete.append(name)
+                        print(f"Ім'я контакту {name} було успішно змінено на {new_value}")
+                    else:
+                        print("Ім'я записано некоректно. Воно має бути з великої літери")
+                elif attribute in ["email", "edit email", "email address"]:
+                    new_value = input("Введіть нові дані Email: ")
+                    if re.match(Contact._PATTERN_FOR_EMAIL, new_value):
+                        record["Email"] = [new_value]
+                        print(f"Email контакту {name} було успішно змінено на {new_value}")
+                    else:
+                        print("Email записано некоректно.")
+                elif attribute in ["phone", "edit phone", "phonenumber", "number"]:
+                    new_value = input("Введіть нові дані PhoneNumber: ")
+                    if re.match(Contact._PATTERN_FOR_PHONE, new_value):
+                        record["Телефон"] = [new_value]
+                        print(f"Телефон контакту {name} було успішно змінено на {new_value}")
+                    else:
+                        print("Телефон записано некоректно.")
+                elif attribute in ["date", "birthdate", "birthday", "birth"]:
+                    new_value = input("Введіть нові дані Birthdate: ")
+                    if new_value:
+                        chars = "/ ,-"
+                        for char in chars:
+                            new_value = new_value.replace(char, ".")
+                        true_value = datetime.strptime(new_value, "%d.%m.%Y").date()
+                        record["Birthdate"] = true_value
+                        print(f"Birthdate контакту {name} було успішно змінено на {true_value}")
+                    else:
+                        print("Birthdate записано некоректно.")
+                elif attribute in ["address", "home address", "home"]:
+                    new_value = input("Введіть нові дані Address: ")
+                    if re.match(Contact._PATTERN_FOR_ADRESS, new_value):
+                        record["Адреса"] = new_value
+                        print(f"Адреса контакту {name} було успішно змінено на {new_value}")
+                    else:
+                        print("Адреса записано некоректно.")
+                else:
+                    print("Зазначеного атрибуту немає")
+        if contacts_for_delete:
+            for el in contacts_for_delete:
+                self.data.pop(el)
+                del contacts_for_delete
+            self.data.update(new_dict)
+        sorted_dict = dict(sorted(self.data.items()))
+        self.data = deepcopy(sorted_dict)
 
 
 ab = AddressBook()
 
 
 class Contact(UserDict):
+    _PATTERN_FOR_NAME = r"^[A-ZА-ЩЬЮ-ЯІҐЄ][a-zа-щью-яґіїє`]+(?:[-][A-ZА-ЩЬЮ-ЯІҐЄ][a-zа-щью-яґіїє`^]+)?(?:[ -][A-ZА-ЩЬЮ-ЯІҐЄ][a-zа-щью-яґїіє`^]+)?(?:[ ][A-ZА-ЩЬЮ-ЯІҐЄ][a-zа-щью-яґіїє`^]+)?(?:[-][A-ZА-ЩЬЮ-ЯІҐЄ][a-zа-щью-яґіїє`^]+)?\b"
+    _PATTERN_FOR_PHONE = r'^\+?\d{11,16}$|^\d{10,12}$|^\+?\d{0,4}\(\d{3}\)\d{7,9}$|^\+?\d{0,4}\(\d{3}\)\d{1,3}-\d{1,3}-\d{1,3}$|^\(\d{3}\)\d{1,3}-\d{1,3}-\d{1,3}\|^\d{3}-\d{1,3}-\d{1,3}-\d{1,3}$'
+    _PATTERN_FOR_ADRESS = r"вул\. (?:[a-щь-яА-ЩЬ-ЯїЇіІ'єЄҐґ]+[\s-]){1,}\d+\/\d+"
+    _PATTERN_FOR_EMAIL = r"[a-z\d_-]+@[a-z]+\.[a-z]+(?:\.[a-z]+)?"
 
     """
     Клас, що формує контактну книгу (всю інформацію про один певний контакт)
@@ -139,7 +224,7 @@ class Contact(UserDict):
 
     @name.setter
     def name(self, value):
-        if value.istitle():  # Тут проста перевірка, щоб користувач з великої літери вводив ім'я. Можливо ще додам регулярку, щоб тільки букви були без спецсимволів
+        if re.match(self._PATTERN_FOR_NAME, value):
             self.__name = value
         else:
             print("Ім'я записано некоректно. Потрібно записати з великої літери")
@@ -151,8 +236,7 @@ class Contact(UserDict):
     @adress.setter
     def adress(self, value):
         if value:
-            pattern_for_adress = r"вул\. (?:[a-щь-яА-ЩЬ-ЯїЇіІ'єЄҐґ]+[\s-]){1,}\d+\/\d+"  # Валідація адреси
-            if re.match(pattern_for_adress, value):
+            if re.match(self._PATTERN_FOR_ADRESS, value):
                 self.__address = value
             else:
                 print(
@@ -165,8 +249,7 @@ class Contact(UserDict):
     @phonenumber.setter
     def phonenumber(self, value):
         if value:
-            pattern_for_phone = r'^\+?\d{11,16}$|^\d{10,12}$|^\+?\d{0,4}\(\d{3}\)\d{7,9}$|^\+?\d{0,4}\(\d{3}\)\d{1,3}-\d{1,3}-\d{1,3}$|^\(\d{3}\)\d{1,3}-\d{1,3}-\d{1,3}\|^\d{3}-\d{1,3}-\d{1,3}-\d{1,3}$'  # Валідація номера телефона
-            if re.match(pattern_for_phone, value):
+            if re.match(self._PATTERN_FOR_PHONE, value):
                 self.__phonenumber = [value]
             else:
                 print("Телефон записан невірно")
@@ -178,8 +261,7 @@ class Contact(UserDict):
     @email.setter
     def email(self, value):
         if value:
-            pattern_for_email = r"[a-z\d_-]+@[a-z]+\.[a-z]+(?:\.[a-z]+)?"  # Валідація email
-            if re.match(pattern_for_email, value):
+            if re.match(self._PATTERN_FOR_EMAIL, value):
                 self.__email = [value]
             else:
                 print("Електронна адреса записана невірно. Формат email: 'name@example.com' або 'name@example.com.ua' ")
@@ -236,28 +318,16 @@ def write_contact():
         print("Відсутня контактна картка для додавання")
 
 
-def add_p():
-    if ab:
-        ab.add_phone()
-    else:
-        print("Адресна книга порожня. Додайте контактні картки до неї")
-
-
-def add_e():
-    if ab:
-        ab.add_email()
-    else:
-        print("Адресна книга порожня. Додайте контактні картки до неї")
-
-
 commands = {
     write_contact: "записати",   # Команда, яка формує контактну картку і записує її одразу в адрессбук
     ab.view: "перегляд",         # Перегляд одразу всього адрессбуку
-    add_p: "номер",              # Команда, яка додає номер до існуючого контакту
+    ab.add_phone: "номер",              # Команда, яка додає номер до існуючого контакту
     info_command: "команди",     # Інфо-команда, яка виводе список всіх доступних команд
-    add_e: "email",              # Команда, яка додає email до існуючого контакту
+    ab.add_email: "email",              # Команда, яка додає email до існуючого контакту
     ab.coming_birthdays: "дні",  # Команда, яка в залежності від заданої кількості днів виводить дні народження записаних контактів в періоді від сьогодні до заданої кількості днів
-    ab.find: "знайти"            # Команда, яка знаходить контактів за номером або ім'ям
+    ab.find: "знайти",           # Команда, яка знаходить контактів за номером або ім'ям
+    ab.remove_contact: "видалити",  # Команда, яка видаляє зазначений контакт
+    ab.edit_contact: "редагувати"   # Команда, яка редагує атрибути зазначеного контакту
 }
 
 
@@ -271,16 +341,15 @@ def start():  # точка входу
     print(info)
     while True:
         command = input("Введіть команду --> ").lower()
-        if not command:
-            continue
-        elif command in commands.values():
+        if command in commands.values():
             for key, value in commands.items():
                 if command == value:
                     key()
         elif command in ["вихід", "бувай", "закрити"]:
+            print("Good bye! Your personal helper will see you later :)")
             break
         else:
-            print("Недоступна команда. Перегляд команд за запитом 'команди'")
+            print("Недоступна команда. Введіть одну із доступних команд!\n(перегляд команд за запитом 'команди')")
 
 
 start()  # запускається помічник тут
