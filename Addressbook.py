@@ -61,6 +61,7 @@ class AddressBook(UserDict):
         else:
             print(f"Contact {contact_enter} isn't exist. Select one of your existing contacts!")
 
+
     @check_empty_ab
     def add_email(self):
         contact_enter = input("Choose contact for adding email address: ")
