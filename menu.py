@@ -1,7 +1,7 @@
 import importlib
 import os
 from calend import calend_main
-# from 
+from Addressbook import start
 from notebook.nb_main import NoteManager
 from file_sorter import start
 from exchanger import ex_main
@@ -11,7 +11,7 @@ class Menu:
     def __init__(self):
         self.choices = {
             1: ("calend", "calend_main"),
-            2: ("adressbook", "adressbook_main"),
+            2: ("Addressbook", "start"),
             3: ("notebook.nb_main", "nb_main"),
             4: ("file_sorter", "start"),
             5: ("exchanger", "ex_main")
@@ -24,7 +24,7 @@ class Menu:
             return
         
         if choice == 3:
-            note_folder = "notebook/notes"  # Задайте шлях до папки для зберігання нотаток
+            note_folder = "notebook/notes"
             note_manager = NoteManager(note_folder)
             note_manager.nb_main()
             return True

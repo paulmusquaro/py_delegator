@@ -357,4 +357,4 @@ def start():  # точка входу
             print("Wrong command! Choose one of available commands!\n(Review available commands - 'commands')")
 
 
-start()  # запускається помічник тут
+# start()  # запускається помічник тут
