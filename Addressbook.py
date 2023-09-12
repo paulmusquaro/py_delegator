@@ -9,7 +9,7 @@ contact = None
 ab = None
 was_saved = False
 
-info = "Hello, this is your Addressbook\nCommands available by request 'commands'"
+info = "Hello, this is your Addressbook! Commands available by request 'commands'"
 
 
 def info_command():
@@ -197,20 +197,27 @@ class AddressBook(UserDict):
     def load(self):
         global was_saved
         file_name = input("Write name of file that should be created in format 'name.file_extension': ")
-        with open(file_name, "wb") as file:
-            pickle.dump(self.data, file)
-            print("Data was successfully saved")
-            was_saved = True
+        if re.match(r"[\w\d]+\.\w+", file_name):
+            with open(file_name, "wb") as file:
+                pickle.dump(self.data, file)
+                print("Data was successfully saved")
+                was_saved = True
+        else:
+            print("Wrong filename format. Should be like 'example.extension'")
 
     def ab_cont(self):
-        file_name = input("Write name of file from where should be imported data in format 'name.file extension': ")
-        try:
-            with open(file_name, "rb") as file:
-                self.data = pickle.load(file)
-                print("Data was opened")
-        except FileNotFoundError:
-            print("There's no exist. Enter true filename!")
-
+        while True:
+            file_name = input("Write name of file from where should be imported data in format 'name.file extension': ")
+            if re.match(r"[\w\d]+\.\w+", file_name):
+                try:
+                    with open(file_name, "rb") as file:
+                        self.data = pickle.load(file)
+                        print("Data was opened")
+                        break
+                except FileNotFoundError:
+                    print("There's no exist. Enter true filename!")
+            else:
+                print("Wrong filename format. Should be like 'example.extension'")
 
 ab = AddressBook()
 
@@ -357,15 +364,23 @@ commands = {
     ab.remove_contact: "remove",  # Команда, яка видаляє зазначений контакт
     ab.edit_contact: "edit",  # Команда, яка редагує атрибути зазначеного контакту
     ab.load: "save",  # Команда, яка зберігає файл
-    ab.ab_cont: "open"
+    ab.ab_cont: "open"  #Команада, що відкриває файл
 }
 
 
 def start():  # точка входу
     print(info)
-    # cont_data = input("Do you want to continue use previous data? (Y/n) ")
-    # if cont_data == ("Y" or "y"):
-    #     ab.cont()
+    cont_data = input("Would you like to continue use previous data? (Y/n) ")
+    while True:
+        if cont_data == ("Y" or "y"):
+           ab.ab_cont()
+           break
+        elif cont_data == ("n" or "n"):
+            print("So, we will launch in first origin mode")
+            break
+        else:
+            print("Try again!")
+            cont_data = input("(Y/n): ")
     while True:
         command = input("Enter command --> ").lower()
         if command in commands.values():
