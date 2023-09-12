@@ -7,14 +7,14 @@ class Calendar:
 
     def show_calendar(self):
         if self.month < 1 or self.month > 12:
-            print("Неправильно введено місяць.")
+            print("The month is entered incorrectly.")
         else:
             cal = calendar.month(self.year, self.month)
             print("\n", cal)
 
 def calend_main():
-    year = int(input("Введіть рік: "))
-    month = int(input("Введіть місяць (1-12): "))
+    year = int(input("Enter the year:"))
+    month = int(input("Enter the month (1-12):"))
     
     my_calendar = Calendar(year, month)
     my_calendar.show_calendar()

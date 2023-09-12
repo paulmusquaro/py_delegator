@@ -15,15 +15,15 @@ class CurrencyConverter:
             current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
             if user_input == 'EXIT':
-                return "До побачення!"
+                return "Good Bye!"
 
             if user_input in data['rates']:
                 rate = data['rates'][user_input]
-                return f"Курс {user_input} станом на {current_datetime}: {rate}"
+                return f"{user_input} rate as of {current_datetime}: {rate}"
             else:
-                return f"Даних для валюти {user_input} немає в наявності"
+                return f"There is no data for currency: {user_input}"
         else:
-            return f"Помилка при отриманні даних. Статус код: {response.status_code}"
+            return f"An error occurred while receiving data. Status code: {response.status_code}"
 
 
 def ex_main():
@@ -31,8 +31,8 @@ def ex_main():
     converter = CurrencyConverter(api_key)
 
     while True:
-        user_input = input("Введіть код валюти (наприклад, EUR або GBP), або 'EXIT' для виходу: ").strip().upper()
+        user_input = input("Enter the currency code (e.g. EUR or GBP), or 'EXIT' to exit:").strip().upper()
         result = converter.convert_currency(user_input)
         print(result)
-        if result == "До побачення!":
+        if result == "Good Bye!":
             break
