@@ -1,17 +1,19 @@
-from collections import UserDict
+import pickle
 import re
+from collections import UserDict
 from collections import deque
 from datetime import datetime, timedelta
 from copy import deepcopy
 
 contact = None
 ab = None
+was_saved = False
 
 info = "Hello, this is your Addressbook\nCommands available by request 'commands'"
 
 
 def info_command():
-    print("Available commands: 'record', 'view', 'add number', 'add email', 'upcoming', 'find', 'remove', 'edit'")
+    print("Available commands: 'record', 'view', 'add number', 'add email', 'upcoming', 'find', 'remove', 'edit', 'open'")
 
 
 def check_empty_ab(func):
@@ -20,6 +22,7 @@ def check_empty_ab(func):
             print("Addressbook is empty. Add contacts and try again!")
         else:
             return func(self, *args, **kwargs)
+
     return wrapper
 
 
@@ -87,7 +90,7 @@ class AddressBook(UserDict):
                     current_bd.update({contact_name: value.replace(year=datetime.now().year)})
         for name, date in current_bd.items():
             if date < start_period:
-                bd_actual.update({name: date.replace(year=start_period.year+1)})
+                bd_actual.update({name: date.replace(year=start_period.year + 1)})
             else:
                 bd_actual.update({name: date})
         bd_dict = {name: date for name, date in bd_actual.items() if end_period >= date >= start_period}
@@ -102,7 +105,6 @@ class AddressBook(UserDict):
 
     @check_empty_ab
     def find(self):
-        print(self.data)
         search_str = str(input("Enter name or phonenumber for search (include partly): ")).lower()
         print("!" * 40)
         contact_find = False
@@ -191,6 +193,24 @@ class AddressBook(UserDict):
         sorted_dict = dict(sorted(self.data.items()))
         self.data = deepcopy(sorted_dict)
 
+    @check_empty_ab
+    def load(self):
+        global was_saved
+        file_name = input("Write name of file that should be created in format 'name.file_extension': ")
+        with open(file_name, "wb") as file:
+            pickle.dump(self.data, file)
+            print("Data was successfully saved")
+            was_saved = True
+
+    def ab_cont(self):
+        file_name = input("Write name of file from where should be imported data in format 'name.file extension': ")
+        try:
+            with open(file_name, "rb") as file:
+                self.data = pickle.load(file)
+                print("Data was opened")
+        except FileNotFoundError:
+            print("There's no exist. Enter true filename!")
+
 
 ab = AddressBook()
 
@@ -232,7 +252,8 @@ class Contact(UserDict):
         if re.match(self._PATTERN_FOR_NAME, value):
             self.__name = value
         else:
-            print("Invalid name. Should starts with upper case and consists real name with/without patronymic and surname")
+            print(
+                "Invalid name. Should starts with upper case and consists real name with/without patronymic and surname")
 
     @property
     def adress(self):
@@ -294,7 +315,8 @@ def write_contact():
     global contact
     print("Enter the following data to fill out the contact card:")
     while True:
-        name = input("Name (should starts with upper case and consists real name with/without patronymic and surname): ")
+        name = input(
+            "Name (should starts with upper case and consists real name with/without patronymic and surname): ")
         if Contact(name).name:
             if Contact(name).name in ab.data.keys():
                 print("The entered contact already exists. Enter a unique name.")
@@ -324,33 +346,37 @@ def write_contact():
 
 
 commands = {
-    write_contact: "record",   # Команда, яка формує контактну картку і записує її одразу в адрессбук
-    ab.view: "view",         # Перегляд одразу всього адрессбуку
-    ab.add_phone: "add number",              # Команда, яка додає номер до існуючого контакту
-    info_command: "commands",     # Інфо-команда, яка виводе список всіх доступних команд
-    ab.add_email: "add email",              # Команда, яка додає email до існуючого контакту
-    ab.coming_birthdays: "upcoming",  # Команда, яка в залежності від заданої кількості днів виводить дні народження записаних контактів в періоді від сьогодні до заданої кількості днів
-    ab.find: "find",           # Команда, яка знаходить контактів за номером або ім'ям
+    write_contact: "record",  # Команда, яка формує контактну картку і записує її одразу в адрессбук
+    ab.view: "view",  # Перегляд одразу всього адрессбуку
+    ab.add_phone: "add number",  # Команда, яка додає номер до існуючого контакту
+    info_command: "commands",  # Інфо-команда, яка виводе список всіх доступних команд
+    ab.add_email: "add email",  # Команда, яка додає email до існуючого контакту
+    ab.coming_birthdays: "upcoming",
+    # Команда, яка в залежності від заданої кількості днів виводить дні народження записаних контактів в періоді від сьогодні до заданої кількості днів
+    ab.find: "find",  # Команда, яка знаходить контактів за номером або ім'ям
     ab.remove_contact: "remove",  # Команда, яка видаляє зазначений контакт
-    ab.edit_contact: "edit"   # Команда, яка редагує атрибути зазначеного контакту
+    ab.edit_contact: "edit",  # Команда, яка редагує атрибути зазначеного контакту
+    ab.load: "save",  # Команда, яка зберігає файл
+    ab.ab_cont: "open"
 }
 
 
 def start():  # точка входу
-
-    """
-    Це програма, яка працює у нескінченному циклі, поки користувач не введе "вихід", "бувай", "закрити",
-    або сповіщає користувача, що команди зі словника commands не існує
-    """
-
     print(info)
+    # cont_data = input("Do you want to continue use previous data? (Y/n) ")
+    # if cont_data == ("Y" or "y"):
+    #     ab.cont()
     while True:
         command = input("Enter command --> ").lower()
         if command in commands.values():
             for key, value in commands.items():
                 if command == value:
                     key()
-        elif command in ["quit", "close", "bye", ""]:
+        elif command in ["quit", "close", "bye", "exit"]:
+            if ab.data and not was_saved:
+                closing = input("Do you want to save data before exiting? (Y/n) ")
+                if closing == ("Y" or "y"):
+                    ab.load()
             print("Good bye! Your AddressBook helper will see you later :)")
             break
         else:
