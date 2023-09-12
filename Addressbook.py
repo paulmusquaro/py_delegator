@@ -13,7 +13,7 @@ info = "Hello, this is your Addressbook\nCommands available by request 'commands
 
 
 def info_command():
-    print("Available commands: 'record', 'view', 'add number', 'add email', 'upcoming', 'find', 'remove', 'edit', 'open'")
+    print("Available commands: 'record', 'view', 'add number', 'add email', 'upcoming', 'find', 'remove', 'edit', 'save', 'open'")
 
 
 def check_empty_ab(func):
