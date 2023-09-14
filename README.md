@@ -5,9 +5,9 @@ This repository contains a set of console utilities that you can use for various
 
 ## Utilities
 
-1. **Calendar** (`calend.py`)
-   - Use this utility to manage your calendar and events.
-   - Run it by executing `calend_main()`.
+1. **File Organizer** (`file_sorter.py`)
+   - Organize files by extensions and other criteria.
+   - Run it by executing `start()`.
 
 2. **Address Book** (`Addressbook.py`)
    - A utility for storing and managing contacts.
@@ -17,9 +17,9 @@ This repository contains a set of console utilities that you can use for various
    - Create, search, and edit notes.
    - Run it by executing `nb_main()`.
 
-4. **File Organizer** (`file_sorter.py`)
-   - Organize files by extensions and other criteria.
-   - Run it by executing `start()`.
+4. **Calendar** (`calend.py`)
+   - Use this utility to manage your calendar and events.
+   - Run it by executing `calend_main()`.
 
 5. **Currency Converter** (`exchanger.py`)
    - Currency conversion using an API.
