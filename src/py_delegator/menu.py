@@ -65,8 +65,10 @@ def main():
             choice = int(input("Enter your choice (1-6): "))
             if choice == 6:
                 break
-            if not option_3_called or (option_3_called and choice != 4):
+            # if not option_3_called or (option_3_called and choice != 4):
+            else:
                 option_3_called = menu.make_decision(choice)
+
         except ValueError:
             print("Invalid input. Please enter a number between 1 and 6.")
 
