@@ -1,20 +1,20 @@
-import importlib
+# import importlib
 import os
-from calend import calend_main
-from Addressbook import start
-from notebook.nb_main import NoteManager
-from file_sorter import start
-from exchanger import ex_main
+from .calend import calend_main
+from .Addressbook import start as start_ab
+from .notebook.nb_main import NoteManager
+from .file_sorter import start as start_fs
+from .exchanger import ex_main
 
 
 class Menu:
     def __init__(self):
         self.choices = {
-            1: ("calend", "calend_main"),
-            2: ("Addressbook", "start"),
+            1: ("file_sorter", start_fs),
+            2: ("Addressbook", start_ab),
             3: ("notebook.nb_main", "nb_main"),
-            4: ("file_sorter", "start"),
-            5: ("exchanger", "ex_main")
+            4: ("calend", calend_main),
+            5: ("exchanger", ex_main)
         }
 
     def make_decision(self, choice):
@@ -31,16 +31,18 @@ class Menu:
 
         try:
 
-            if choice == 4:
+            if choice == 1:
                 directory_path = input("Enter the path to directory: ")
                 if os.path.exists(directory_path) and os.path.isdir(directory_path):
-                    function = getattr(importlib.import_module(module_name), function_name)
-                    function(directory_path)
+                    # function = getattr(importlib.import_module(module_name), function_name)
+                    # function(directory_path)
+                    function_name(directory_path)
                 else:
                     print("Invalid directory path. Please enter a valid directory path.")
             else:
-                function = getattr(importlib.import_module(module_name), function_name)
-                function()
+                # function = getattr(importlib.import_module(module_name), function_name)
+                # function()
+                function_name()
         except ModuleNotFoundError:
             print("Module not found.")
         except AttributeError:
@@ -48,10 +50,10 @@ class Menu:
 
 def main():
     print("Choose an option:")
-    print("1. Calendar")
+    print("1. File Sorter")
     print("2. Address Book")
     print("3. Notebook")
-    print("4. File Sorter")
+    print("4. Calendar")
     print("5. Exchanger")
     print("6. Exit")
 
@@ -68,5 +70,5 @@ def main():
         except ValueError:
             print("Invalid input. Please enter a number between 1 and 6.")
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
