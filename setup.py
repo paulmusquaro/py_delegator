@@ -7,7 +7,7 @@ with open('README.md', 'r', encoding='utf-8') as fh:
 
 setuptools.setup(
       name = 'py_delegator',
-      version = '0.1.8',
+      version = '0.1.9',
       description = 'The First Team Project',
       long_description= long_description,
       long_description_content_type = 'text/markdown',
