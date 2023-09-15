@@ -52,7 +52,7 @@ This repository contains a set of console utilities that you can use for various
 1. **Install via pip**
 
    Open a command prompt or terminal and execute the following command:
-   - *pip install -i https://test.pypi.org/simple/ py-delegator==0.1.5*
+   - *pip install -i https://test.pypi.org/simple/ py-delegator==0.1.9*
 
 2. **Run the Chosen Utility**
 
